@@ -81,6 +81,8 @@ Route::group(array(
     Route::get('tickets/{ticket}/delete', 'AdminTicketsController@getDelete');
     Route::post('tickets/{ticket}/delete', 'AdminTicketsController@postDelete');
     Route::controller('tickets', 'AdminTicketsController');
+	Route::controller('accounts', 'AdminAccountsController');
+	Route::controller('deployments', 'AdminDeploymentsController');
     # User Management
     Route::get('users/{user}/show', 'AdminUsersController@getShow');
     Route::get('users/{user}/edit', 'AdminUsersController@getEdit');
