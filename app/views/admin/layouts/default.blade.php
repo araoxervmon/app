@@ -78,6 +78,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
+                    <a class="navbar-brand" href="{{{ URL::to('/') }}}"><img class="img-responsive" src="{{{ asset('assets/img/logo.png') }}}"></a>  
                 </div>
     			<div class="collapse navbar-collapse navbar-ex1-collapse">
     				<ul class="nav navbar-nav">
@@ -143,10 +144,10 @@
     <script src="{{asset('assets/js/wysihtml5/wysihtml5-0.3.0.js')}}"></script>
     <script src="{{asset('assets/js/wysihtml5/bootstrap-wysihtml5.js')}}"></script>
     <script src="//cdn.datatables.net/1.9.4/js/jquery.dataTables.min.js"></script>
-    <script src="{{asset('assets/js/datatables-bootstrap.js')}}"></script>
-    <script src="{{asset('assets/js/datatables.fnReloadAjax.js')}}"></script>
-    <script src="{{asset('assets/js/jquery.colorbox.js')}}"></script>
-    <script src="{{asset('assets/js/prettify.js')}}"></script>
+    <script src="{{asset('assets/js/jquery-plugins/datatables-bootstrap.js')}}"></script>
+    <script src="{{asset('assets/js/jquery-plugins/datatables.fnReloadAjax.js')}}"></script>
+    <script src="{{asset('assets/js/jquery-plugins/jquery.colorbox.js')}}"></script>
+    <script src="{{asset('assets/js/jquery-plugins/prettify.js')}}"></script>
 
     <script type="text/javascript">
     	$('.wysihtml5').wysihtml5();

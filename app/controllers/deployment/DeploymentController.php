@@ -163,25 +163,26 @@ class DeploymentController extends BaseController {
 						$deployment -> job_id = $obj1->job_id;
 						$deployment -> status = Lang::get('deployment/deployment.status');
 						unset($deployment -> token );
-						 //$deployment->status = $status;
-		            	$success = $deployment->save();
+						$success = $deployment->save();
 		            	if (!$success) {
 		            		Log::error('Error while saving deployment : '.json_encode( $deployment->errors()));
 							return Redirect::to('deployment')->with('error', 'Error saving deployment!' );
-		                //throw new Exception($deployment->errors());
-						}
+		                }
 					}
 					else if(!empty($obj1) && $obj1->status == 'error')
 					{
-						Log::error('Failed during deployment!'. $obj1->message);
-						return Redirect::to('deployment')->with('error', 'Failed during deployment!'. $obj1->message);
+						Log::error('Failed during deployment!'. $obj1->fail_message);
+						Log::error('Log :' . implode(' ', $obj2->job_log));
+            			return Redirect::to('deployment')->with('error', 'Failed during deployment!'. $obj1->fail_message);
 					}
 					return Redirect::to('deployment')->with('success', Lang::get('deployment/deployment.deployment_updated'));
 	            }
 				else if(!empty($obj) && $obj->status == 'error')
 				{
-					Log::error('Failed to authenticate before deployment!'. $obj->message);
-					return Redirect::to('deployment')->with('error', 'Failed to authenticate before deployment!'. $obj->message);
+					Log::error('Failed to authenticate before deployment!'.$obj2->fail_code .':'. $obj->fail_message);
+					Log::error('Log :' . implode(' ', $obj2->job_log));
+            
+					return Redirect::to('deployment')->with('error', 'Failed to authenticate before deployment!'. $obj->fail_message);
 				}
 				else
 				{
@@ -260,7 +261,6 @@ class DeploymentController extends BaseController {
     public function postDelete($id) 
     {
     	$this->check();
-    	$this->terminateInstance($id);
     	Deployment::where('id', $id)->where('user_id', Auth::id())->delete();
 		
         // Was the comment post deleted?
@@ -274,7 +274,7 @@ class DeploymentController extends BaseController {
         }
     }
 
-	private function terminateInstance($id)
+	private function postTerminate($id)
 	{
 		$this->check();
 		$deployment = Deployment::where('user_id', Auth::id())->find($id);
@@ -283,8 +283,8 @@ class DeploymentController extends BaseController {
 		$instanceId =  Input::get('instanceID');
 		Log::error('Terminating Instance :'. $instanceId);
 		$response = $this->executeAction(Input::get('instanceAction'), $account, $deployment, $instanceId);
-		if($response['status'] == 'OK') return TRUE;
-		else return FALSE;
+		if($response['status'] == 'OK') return Redirect::to('/')->with('success', 'Instance Terminated Successfully!');
+		else return Redirect::to('/')->with('error', 'Error while terminating the instance!');;
 			
 	}
 	
@@ -326,7 +326,9 @@ class DeploymentController extends BaseController {
 			else  if(!empty($obj2) && $obj2->status == 'error')
 			 {
 				 // There was a problem deleting the user
-	            return Redirect::to('deployment')->with('error', $obj2->message );
+				 Log::error('Request to deploy failed :' . $obj2->fail_code . ':' . $obj2->fail_message);
+				 Log::error('Log :' . implode(' ', $obj2->job_log));
+	            return Redirect::to('deployment')->with('error', $obj2->fail_message );
 			 }	
 			else
 			{
@@ -337,7 +339,9 @@ class DeploymentController extends BaseController {
 		 else if(!empty($obj) && $obj->status == 'error')
 		 {
 			 // There was a problem deleting the user
-            return Redirect::to('deployment')->with('error', $obj->message );
+			Log::error('Request to deploy failed :' . $obj2->fail_code . ':' . $obj2->fail_message);
+			Log::error('Log :' . implode(' ', $obj2->job_log));
+            return Redirect::to('deployment')->with('error', $obj->fail_message );
 		 }	
 		 else
 		 {
@@ -366,7 +370,9 @@ class DeploymentController extends BaseController {
 			}
 			else if(!empty($obj) && $obj->status == 'error')
 			{
-				 return Redirect::to('deployment')->with('error', $obj->message );
+				Log::error('Request to deploy failed :' . $obj2->fail_code . ':' . $obj2->fail_message);
+				Log::error('Log :' . implode(' ', $obj2->job_log));
+            	return Redirect::to('deployment')->with('error', $obj->fail_message );
 			}
 			else
 				{
@@ -408,8 +414,7 @@ class DeploymentController extends BaseController {
 		}
 		else if($arr['status'] == 'error')
 		{
-			Log::error('Error occured - while submitting '. $instanceAction .' request');
-					//return Redirect::to('deployment')->with('error', 'Error while submitting  '.$instanceAction .'request ' );
+			Log::error('Error occured - while submitting :'.$instanceAction);
 			print json_encode(array('status' => 'error', 'message' => 'Error while submitting '.$instanceAction .' request ' ));
 		}
 		
@@ -433,6 +438,7 @@ class DeploymentController extends BaseController {
 		
 		if($arr['status'] == 'OK')
 		{
+			$key = StringHelper::decrypt($arr['key'], md5(Auth::user()->username));
 			header('Content-Description: File Transfer');
 			header('Content-Type: ' . 'application/x-pem-file');
 			header('Content-Disposition: attachment; filename=' . $arr['keyName'] . '.pem');
@@ -440,8 +446,8 @@ class DeploymentController extends BaseController {
 			header('Expires: 0');
 			header('Cache-Control: must-revalidate');
 			header('Pragma: public');
-			header('Content-Length: ' . strlen($arr['key']));
-			print $arr['key'];
+			header('Content-Length: ' . strlen($key));
+			print $key;
 		}
 	}
 	

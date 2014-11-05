@@ -123,11 +123,37 @@ Route::controller('user', 'UserController');
 
 # Filter for detect language
 Route::when('contact-us', 'detectLang');
+
 # Contact Us Static Page
 Route::get('contact-us', function () {
     // Return about us page
-    return View::make('site/contact-us');
+    return View::make('site/static/contact-us');
 });
+
+Route::when('roadmap', 'detectLang');
+Route::get('roadmap', function () {
+    // Return about us page
+    return View::make('site/static/roadmap');
+});
+
+Route::when('data-security', 'detectLang');
+Route::get('data-security', function () {
+    // Return about us page
+    return View::make('site/static/data-security');
+});
+
+Route::when('devops', 'detectLang');
+Route::get('devops', function () {
+    // Return about us page
+    return View::make('site/static/devops');
+});
+
+Route::when('videos', 'detectLang');
+Route::get('videos', function () {
+    // Return about us page
+    return View::make('site/static/videos');
+});
+
 /* We don't use the default blog stuff
 # Posts - Second to last set, match slug
 Route::get('{postSlug}', 'BlogController@getView');
@@ -160,10 +186,9 @@ Route::group(array(
 	Route::any('deployment/{deployment}/downloadKey', 'DeploymentController@getDownloadKey');
 	Route::any('deployment/{deployment}/refresh', 'DeploymentController@checkStatus');
 	
-	 Route::any('awsPricing/', 'AWSPricingController@getIndex'); 
+	Route::any('awsPricing/', 'AWSPricingController@getIndex'); 
 	
-    // Route::get('deployment/{id}/edit/', 'DeploymentController@getCreate');
-    Route::group(array(
+	Route::group(array(
         'before' => 'csrf'
     ) , function () {
         Route::post('account/create', 'AccountController@postEdit');
@@ -171,6 +196,7 @@ Route::group(array(
         Route::post('account/{account}/delete', 'AccountController@postDelete');
         Route::post('deployment/create', 'DeploymentController@postEdit');
         Route::post('deployment/{deployment}/delete', 'DeploymentController@postDelete');
+		//Route::post('deployment/{deployment}/terminate', 'DeploymentController@postTerminate');
 		Route::post('deployment/{deployment}/instanceAction', 'DeploymentController@postInstanceAction');
 		Route::post('ticket/create', 'TicketController@postEdit');
         Route::post('ticket/{ticket}/edit', 'TicketController@postEdit');
