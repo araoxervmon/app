@@ -32,6 +32,9 @@
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
 
+		<script src="{{asset('bower_components/jquery/dist/jquery.min.js')}}"></script>
+        <script src="{{asset('assets/js/jquery-plugins/jquery.crypt.js')}}"></script>
+
 		<!-- Favicons
 		================================================== -->
 		<link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{{ asset('assets/ico/apple-touch-icon-144-precomposed.png') }}}">
@@ -116,6 +119,7 @@
 					</div>
 				</div>
 			</nav>
+			
 			<!-- ./ navbar -->
 			<!--
 			<a class="banner-github {{ (Request::is('/') ? '' : 'hide') }}" href="https://github.com/XDocker/app" target="_blank">
@@ -123,7 +127,8 @@
 		    </a>
 			-->
 			<!-- Container -->
-			<div class="container clear-both" style="margin-top: 3em;">
+			<div class="container clear-both" style="margin-top: 4em;">
+				@yield('breadcrumbs')
 				
 				<!-- Notifications -->
 				@include('notifications')
@@ -138,13 +143,12 @@
 			<!-- the following div is needed to make a sticky footer -->
 			<div id="push"></div>
 			@include('site.footer')
-		   
 	    </div>
 		<!-- ./wrap -->
 
 		<!-- Javascripts
 		================================================== -->
-        <script src="{{asset('bower_components/jquery/dist/jquery.min.js')}}"></script>
+        
         <script src="{{asset('bower_components/bootstrap/dist/js/bootstrap.min.js')}}"></script>
         <script src="{{asset('assets/js/jquery-plugins/jquery.fileDownload.js')}}"></script>
         <?php if(!Auth::check()) : ?>

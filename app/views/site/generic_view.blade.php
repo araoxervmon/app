@@ -39,17 +39,28 @@
 								<input type="hidden" name="instanceAction" value="delete" />
 								<input type="hidden" name="instanceID" value="{{{ $result->instance_id }}}" />
 								<!-- ./ csrf token -->
-								<button alt="Deletes the deployment record and not the instance from your AWS account." title="Deletes the deployment record and not the instance from your AWS account." type="submit" class="btn btn-danger pull-right" role="button"><span class="glyphicon glyphicon-remove"></span></button>
-							</form>
-							<form class="pull-right" method="post" action="{{ URL::to('deployment/' . $deployment->id . '/terminate') }}">
+
+
+								<button type="button" class="btn btn-danger pull-right" role="button" data-toggle="modal" data-target="#confirmDelete" data-title="Delete Deployment" data-message="{{ Lang::get('deployment/deployment.deployment_delete') }}">
+						        <span class="glyphicon glyphicon-remove"></span></button>
+								<!-- <button alt="Deletes the deployment record and not the instance from your AWS account." title="Deletes the deployment record and not the instance from your AWS account." type="submit" class="btn btn-danger pull-right" role="button"><span class="glyphicon glyphicon-remove"></span></button> -->
+							   </form>
+
+
+							   <form class="pull-right" method="post" action="{{ URL::to('deployment/' . $deployment->id . '/terminate') }}">
 								<!-- CSRF Token -->
 								<input type="hidden" name="_token" value="{{{ csrf_token() }}}" />
 								<input type="hidden" name="instanceAction" value="terminate" />
 								<input type="hidden" name="instanceID" value="{{{ $result->instance_id }}}" />
 								<!-- ./ csrf token -->
-								<button alt="Terminates the Instance from your AWS account." title="Terminates the Instance from your AWS account." type="submit" class="btn btn-warning pull-right" role="button"><span class="glyphicon glyphicon-trash"></span></button>
-							</form>
-							<div class="media-body">
+								<button type="button" class="btn btn-warning pull-right" role="button" data-toggle="modal" data-target="#confirmDelete1"  data-title="Terminate Instance" data-message="{{ Lang::get('deployment/deployment.deployment_terminate') }}">
+						        <span class="glyphicon glyphicon-trash"></span>
+					            </button>
+
+
+								<!-- <button alt="Terminates the Instance from your AWS account." title="Terminates the Instance from your AWS account." type="submit" class="btn btn-warning pull-right" role="button"><span class="glyphicon glyphicon-trash"></span></button> -->
+			                  </form>
+							 <div class="media-body">
 								
 								<h4 class="media-heading">{{ String::title($deployment->name) }} </h4>
 								<p>
@@ -59,8 +70,9 @@
 									$logUrl = URL::to('deployment/'.$deployment->id.'/log');
 									if(in_array($deployment->status, array('Completed', 'start', 'stop')))
 										{
+											$instanceState = CloudProvider::getState($deployment->cloudAccountId, $result->instance_id);
 											$anchor = '<a target="_blank" href="'.xDockerEngine::getProtocol($deployment->docker_name). $result->public_dns .xDockerEngine::urlAppend($deployment->docker_name).'">'.xDockerEngine::getDisplayName($deployment->docker_name).'</a>';
-											echo $result->instance_id .CloudProvider::getState($deployment->cloudAccountId, $result->instance_id) .' | '.xDockerEngine::getDockerUrl($deployment->docker_name) . ' | ' .$anchor . ' | '  .xDockerEngine::documentationUrl($deployment->docker_name) 
+											echo $result->instance_id .' ' .$instanceState .' | '.xDockerEngine::getDockerUrl($deployment->docker_name) . ' | ' .$anchor . ' | '  .xDockerEngine::documentationUrl($deployment->docker_name) 
 											.' | <a title="Support" alt="Support" class="glyphicon glyphicon-envelope" href="mailto:support@xervmon.com"></a>'
 											.' | <a title="Contact Xervmon to manage this" alt="Contact Xervmon to manage this" href="mailto:support@xervmon.com"><img src="'.asset('assets/ico/favicon.ico').'"/></a>'
 									
@@ -80,6 +92,12 @@
 										. ' | <a title="ViewLog" href="'.$logUrl.'" ><span class="glyphicon glyphicon-th-list"> </span>  </a>';
 									}
 									?>
+
+									@if($deployment->status == 'Completed' && isset($result->public_dns))
+										@if (strpos($instanceState, 'running') !== false) 
+											<span title="Created At"><a href="{{{URL::to('deployment/'.$deployment->id.'/Containers')}}}">{{ ' | '}}<span class="fa fa-info"></span></a> </span>
+										@endif
+									@endif
 									
 								</p>
 								<p>
@@ -87,12 +105,7 @@
 									{{UIHelper::getDataOrganized($deployment->parameters)}}
 									
 								</p>
-								<p>
-									@if($deployment->status == 'Completed' && isset($result->public_dns))
-										{{UIHelper::getContainer(RemoteAPI::Containers($result->public_dns))}}
-									@endif
-								</p>
-			
+										
 								<p>
 									<span title="Created At"><span class="glyphicon glyphicon-calendar"></span> <strong>Build Date</strong>:{{{ $deployment->created_at }}}</span>
 								</p>
@@ -110,6 +123,7 @@
 	@if(empty($deployments) || count($deployments) === 0) 
 		<div class="alert alert-info"> {{{ Lang::get('deployment/deployment.empty_deployments') }}}</div>
 	@endif
+	{{$deployments->links()}}
 </div>
 
 <!--
@@ -152,7 +166,7 @@
 						<span class="pull-left" href="#">
 							<img style="width:25px;height:25px" class="media-object img-responsive" src="{{ asset('/assets/img/providers/'.xDockerEngine::getLogo($instance -> name)) }}" alt="{{ $instance -> name }}" />
 						</span>
-						<a href="{{ URL::to('deployment/create/') }}?name={{urlencode($instance -> name)}}" class="btn btn-primary pull-right" role="button"><span class="glyphicon glyphicon-play"></span></a>
+						<a  id="deploy_add_btn"  href="{{ URL::to('deployment/create/') }}?name={{urlencode($instance -> name)}}" class="btn btn-primary pull-right" role="button"><span class="glyphicon glyphicon-play"></span></a>
 						<div class="media-body">
 							<h4 class="media-heading">{{!empty($instance -> name)?xDockerEngine::getDockerUrl($instance->name).' ' .$instance->name:''}}</h4>
 						    <p>
@@ -199,4 +213,6 @@
 		</div>
 	</div> -->
 </div>
+@include('deletemodal')
+
 <script src="{{asset('assets/js/deployment.js')}}"></script>

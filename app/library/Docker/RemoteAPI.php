@@ -26,11 +26,54 @@ class RemoteAPI
         return $status;
     }
 	
-	public static function Containers($url)
+	 public static function Containers($url)
+     {
+     	$client = new Docker\Http\DockerClient(array(), $url . ':4243/containers/json');
+        $docker = new Docker\Docker($client);
+		$containers = $docker->getContainerManager()->findAll();
+		$arr = [];
+		foreach($containers as $container)
+		{
+			$obj = $docker->getContainerManager()->find($container->getId());
+			$arr[] = $obj;
+		}
+
+		return $arr;
+     }
+
+     public static function stopContainer($id, $url)
+	 {
+	 	$client = new Docker\Http\DockerClient(array(), $url . ':4243/containers/json');
+        $docker = new Docker\Docker($client);
+		$container = $docker->getContainerManager()->find($id);
+		$ret = $docker->getContainerManager()->stop($container);
+		$data = $ret->find($id);
+		echo '<pre>';
+		print_r($data);
+	 }
+	 
+	 public static function startContainer($id, $url)
+	 {
+	 	$client = new Docker\Http\DockerClient(array(), $url . ':4243/containers/json');
+        $docker = new Docker\Docker($client);
+		$container = $docker->getContainerManager()->find($id);
+		$ret = $docker->getContainerManager()->start($container);
+		$data = $ret->find($id);
+		echo '<pre>';
+		print_r($data);
+	 }
+	
+	public static function Containers2($url)
 	{
-		$ret  = shell_exec('curl -X --connect-timeout 60 GET http://'.$url.':4243/containers/json');
-		$ret = StringHelper::isJson($ret) ? json_decode($ret) :  '';
-		return $ret;
+		$process = curl_init();
+        curl_setopt($process, CURLOPT_URL, $url);
+        curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($process, CURLOPT_SSL_VERIFYPEER, FALSE);
+		curl_setopt($process, CURLOPT_CUSTOMREQUEST, "GET");
+		$status = curl_exec($process);
+        curl_close($process);
+        
+        return $status;
 	}
 		
 }

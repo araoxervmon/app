@@ -2,6 +2,7 @@
 
 {{-- Content --}}
 @section('content')
+@section('breadcrumbs', Breadcrumbs::render('Ticket'))
 
 <div class="page-header">
 	<div class="row">
@@ -89,7 +90,7 @@
 	</div>
 </div>
 <div>
-<a href="{{ URL::to('ticket/create') }}" class="btn btn-primary pull-right" role="button">{{{ Lang::get('ticket/ticket.add_ticket') }}}</a>
+<a id="ticket_add_btn" href="{{ URL::to('ticket/create') }}" class="btn btn-primary pull-right" role="button">{{{ Lang::get('ticket/ticket.add_ticket') }}}</a>
 </div>
 
 @stop

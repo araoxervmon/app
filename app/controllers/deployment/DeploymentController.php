@@ -175,14 +175,16 @@ class DeploymentController extends BaseController {
 						Log::error('Log :' . implode(' ', $obj2->job_log));
             			return Redirect::to('deployment')->with('error', 'Failed during deployment!'. $obj1->fail_message);
 					}
+					
+					UtilHelper::sendMail(Auth::user(), $account->name, $deployment, 'site/deployment/email', Lang::get('deployment/deployment.deployment_updated'));
+					
 					return Redirect::to('deployment')->with('success', Lang::get('deployment/deployment.deployment_updated'));
 	            }
 				else if(!empty($obj) && $obj->status == 'error')
 				{
 					Log::error('Failed to authenticate before deployment!'.$obj2->fail_code .':'. $obj->fail_message);
 					Log::error('Log :' . implode(' ', $obj2->job_log));
-            
-					return Redirect::to('deployment')->with('error', 'Failed to authenticate before deployment!'. $obj->fail_message);
+            		return Redirect::to('deployment')->with('error', 'Failed to authenticate before deployment!'. $obj->fail_message);
 				}
 				else
 				{
@@ -194,6 +196,7 @@ class DeploymentController extends BaseController {
             catch(Exception $err) {
                 $status = 'Unexpected Error: ' . $err->getMessage();
 				Log::error('Error while saving deployment : '. $status);
+				
                 throw new Exception($err->getMessage());
             }
             
@@ -237,7 +240,8 @@ class DeploymentController extends BaseController {
 				return Redirect::back()->with('error', 'App Username/Password are required fields for ' . $deployment -> docker_name);
 			}
 		}
-		$userArr = array( 'app_username' => $parameters->app_username, 'app_psw' => $parameters->app_psw);
+		
+		$userArr = array( 'app_username' => $parameters->app_username, 'app_psw' => crypt($parameters->app_psw, base64_encode($parameters->app_psw)));
 		
 		$env= $dockerParams['env'];
 		$dockerParams['env'] = array_merge($env, $userArr);
@@ -498,6 +502,49 @@ class DeploymentController extends BaseController {
 		echo json_encode($ondemand);
 		
 		//echo json_encode(EC2InstancePrices::On)
+	}
+
+	public function getContainers($id)
+	{
+		$deployment 	= Deployment::where('user_id', Auth::id())->find($id);
+		$deployment     = json_decode($deployment->toJson());
+
+		Log::info('Stopping Deployment '. $deployment->name);	
+		$result = json_decode($deployment->wsResults);
+		Log::info('Starting Container '. $result->public_dns);
+		$containers = RemoteAPI::Containers($result->public_dns);
+		return View::make('site/deployment/containers/container', array(
+            'containers' => $containers,
+            'deployment' => $deployment
+        ));
+	}
+
+	public function startContainer()
+	{
+		echo $id = Input::get('id');
+		
+		$deploymentId = Input::get('deploymentId');
+		$deployment 	= Deployment::where('user_id', Auth::id())->find($deploymentId);
+		Log::info('Starting Deployment '. $deployment->name);
+		echo $deploymentId;
+		$result = json_decode($deployment->wsResults);
+		Log::info('Starting Container '. $result->public_dns);
+		return RemoteAPI::startContainer($id, $result->public_dns);
+		die();
+		
+	}
+	
+	public function stopContainer()
+	{
+		echo $id = Input::get('id');
+		
+		$deploymentId = Input::get('deploymentId');
+		$deployment 	= Deployment::where('user_id', Auth::id())->find($deploymentId);
+		Log::info('Stopping Deployment '. $deployment->name);
+		echo $deploymentId;
+		$result = json_decode($deployment->wsResults);
+		RemoteAPI::stopContainer($id, $result->public_dns);
+		die();
 	}
 
 	
